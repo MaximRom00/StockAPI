@@ -1,0 +1,6 @@
+id,symbol,name,current_price,high_24h,low_24h,market_cap_rank
+bitcoin,btc,Bitcoin,43548.0,44376.0,42867.0,1
+ethereum,eth,Ethereum,3200.03,3270.94,3149.93,2
+tether,usdt,Tether,1.001,1.004,0.996229,3
+binancecoin,bnb,BNB,433.63,436.56,418.92,4
+usd-coin,usdc,"USD Coin",0.996601,1.002,0.992357,5

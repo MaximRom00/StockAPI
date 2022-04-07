@@ -1,0 +1,34 @@
+# URL API
+application:
+  cryptoCurrencyUrlTemplate: 'https://api.coingecko.com/api/v3/coins/markets?'
+  fileName: 'crypto.csv'
+
+server:
+  port: 8081
+  error:
+    include-message: always
+#    Database Mysql
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/stock
+    password: '12345'
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+
+  #    Sending Mail
+  mail:
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: 'true'
+          auth: 'true'
+
+    host: smtp.mailtrap.io
+    username: b21f82e049fbf8
+    password: b19ee18691addb
+    port: '587'
