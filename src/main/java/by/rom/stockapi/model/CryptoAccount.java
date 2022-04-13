@@ -29,6 +29,9 @@ public class CryptoAccount {
     @NotNull
     private Double amountOfCrypto;
 
+    @NotNull
+    private String currency = Currency.USD.getName();
+
     @ManyToOne
     private User user;
 

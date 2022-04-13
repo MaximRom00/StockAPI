@@ -28,9 +28,6 @@ public class User {
     @NotNull
     private String email;
 
-    @NotNull
-    private Currency currency;
-
     @OneToMany(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "user_id")
     private List<CryptoAccount> cryptoAccount;

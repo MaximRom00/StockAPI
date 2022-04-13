@@ -1,37 +1,57 @@
 package by.rom.stockapi.service;
 
+import by.rom.stockapi.converter.CryptoAccountConverter;
+import by.rom.stockapi.converter.CryptoConverter;
+import by.rom.stockapi.exception.CryptoAccountNotFound;
 import by.rom.stockapi.exception.CryptoCurrencyNotFound;
 import by.rom.stockapi.exception.GetCryptoListException;
+import by.rom.stockapi.exception.UserNotFound;
 import by.rom.stockapi.model.Crypto;
+import by.rom.stockapi.model.CryptoAccount;
+import by.rom.stockapi.model.User;
+import by.rom.stockapi.model.dto.CryptoAccountDto;
+import by.rom.stockapi.model.dto.CryptoDto;
+import by.rom.stockapi.repository.CryptoAccountRepository;
 import by.rom.stockapi.repository.CryptoRepository;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class CryptoService {
 
+    private final MailService mailService;
+
     private final CryptoRepository cryptoRepository;
 
-    private final MailSender mailSender;
+    private final CryptoAccountRepository cryptoAccountRepository;
 
-    public CryptoService(CryptoRepository cryptoRepository, MailSender mailSender) {
+    private final CsvWriter csvWriter;
+
+    private final CryptoAccountConverter cryptoAccountConverter;
+
+    private final CryptoConverter cryptoConverter;
+
+    public CryptoService(CryptoRepository cryptoRepository, MailService mailService, CryptoAccountConverter cryptoAccountConverter,
+                         CryptoAccountRepository cryptoAccountRepository, CsvWriter csvWriter, CryptoConverter cryptoConverter) {
         this.cryptoRepository = cryptoRepository;
-        this.mailSender = mailSender;
+        this.mailService = mailService;
+        this.cryptoAccountConverter = cryptoAccountConverter;
+        this.cryptoAccountRepository = cryptoAccountRepository;
+        this.csvWriter = csvWriter;
+        this.cryptoConverter = cryptoConverter;
     }
 
     public List<Crypto> getCryptoList(int size){
-        if (size <= 30){
+        if (size <= 50){
             return cryptoRepository.findAll()
                     .stream()
                     .filter(crypto -> crypto.getMarketCapRank() <= size).collect(Collectors.toList());
         }
-        throw new GetCryptoListException("Size must be less than 30! Try again.");
+        throw new GetCryptoListException("Size must be less than 50! Try again.");
     }
 
     public Crypto findByName(String symbol){
@@ -42,8 +62,52 @@ public class CryptoService {
         else throw new CryptoCurrencyNotFound("Cryptocurrency not found: " + symbol);
     }
 
-    //    @Scheduled
-    public void cryptoInformation(){
+    public List<CryptoDto> getReportCrypto(String size, String fileNameCrypto){
 
+        List<CryptoDto> reportList = getCryptoList(Integer.parseInt(size))
+                .stream()
+                .map(cryptoConverter::toDto)
+                .collect(Collectors.toList());
+
+        System.out.println(reportList);
+        csvWriter.writerCrypto(fileNameCrypto, reportList);
+
+        return reportList;
+    }
+
+    public List<CryptoAccountDto> cryptoAccountSendEmail(String fileName){
+        List<CryptoAccountDto> reportList = cryptoAccountRepository.findAll()
+                .stream()
+                .map(cryptoAccountConverter::toDto)
+                .collect(Collectors.toList());
+
+        csvWriter.writeCryptoAccount(fileName, reportList);
+
+        mailService.sendMessage("csvfile@gmail.com",
+                "Csv file with all accounts.",
+                "This email subject", "" +
+                        "cryptoAccount.csv");
+        return reportList;
+    }
+
+    public void deleteAccount(String id) {
+        Optional<CryptoAccount> cryptoAccount = cryptoAccountRepository.findById(Long.parseLong(id));
+
+        if (cryptoAccount.isPresent()){
+            cryptoAccountRepository.deleteById(Long.parseLong(id));
+        }
+        else throw new CryptoAccountNotFound("Account didn't find with id: " + id);
+    }
+
+    public Crypto getCryptoLowestPrice() {
+        return cryptoRepository.findAll()
+                .stream().min(Comparator.comparing(Crypto::getCurrentPrice))
+                .get();
+    }
+
+    public Crypto getCryptoHighestPrice() {
+        return cryptoRepository.findAll()
+                .stream().max(Comparator.comparing(Crypto::getCurrentPrice))
+                .get();
     }
 }

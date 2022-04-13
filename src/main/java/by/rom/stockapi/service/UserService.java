@@ -9,12 +9,10 @@ import by.rom.stockapi.model.User;
 import by.rom.stockapi.repository.CryptoAccountRepository;
 import by.rom.stockapi.repository.CryptoRepository;
 import by.rom.stockapi.repository.UserRepository;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -25,10 +23,13 @@ public class UserService {
 
     private final CryptoAccountRepository cryptoAccountRepository;
 
-    public UserService(UserRepository userRepository, CryptoRepository cryptoRepository, CryptoAccountRepository cryptoAccountRepository){
+    private final CryptoApiService cryptoApiService;
+
+    public UserService(UserRepository userRepository, CryptoRepository cryptoRepository, CryptoAccountRepository cryptoAccountRepository, CryptoApiService cryptoApiService){
         this.userRepository = userRepository;
         this.cryptoRepository = cryptoRepository;
         this.cryptoAccountRepository = cryptoAccountRepository;
+        this.cryptoApiService = cryptoApiService;
     }
 
     public User saveUser(User user){
@@ -45,52 +46,31 @@ public class UserService {
         return user;
     }
 
-    public String addCryptoAccount(String email, String cryptoShort, String amount){
+    public String addCryptoAccount(String email, String cryptoName, String amount, String...currency){
         User user = userRepository.findUserByEmail(email);
 
         if (user == null){
             throw new UserNotFound("There isn't user with such email, you need to save user.");
         }
 
-        Crypto crypto = cryptoRepository.findBySymbol(cryptoShort);
+        Crypto crypto = cryptoRepository.findByName(cryptoName);
 
         if (crypto == null){
-            throw new UserNotFound("Crypto: " + cryptoShort + " not found.");
+            throw new UserNotFound("Crypto: " + cryptoName + " not found.");
         }
 
         double amountOfCrypto = Double.parseDouble(amount);
 
-        CryptoAccount cryptoAccount = cryptoAccountRepository.findByUser(user);
-
-        if (cryptoAccount == null){
-            cryptoAccount = CryptoAccount
-                .builder()
-                .cryptoName(cryptoShort)
-                .valuePrice(amountOfCrypto * crypto.getCurrentPrice())
-                .amountOfCrypto(amountOfCrypto)
-                .user(user)
-                .build();
+        if (currency[0] != null){
+           crypto = cryptoApiService.getCryptoByCurrency(currency[0], cryptoName);
         }
-        else {
-            Optional<CryptoAccount> account = user.getCryptoAccount()
-                    .stream()
-                    .filter(us -> us.getCryptoName().equalsIgnoreCase(cryptoShort))
-                    .findFirst();
+        else currency[0] = Currency.USD.getName();
 
-            if (account.isEmpty()){
-                cryptoAccount.setCryptoName(cryptoShort);
-                cryptoAccount.setValuePrice(amountOfCrypto * crypto.getCurrentPrice());
-                cryptoAccount.setAmountOfCrypto(amountOfCrypto);
-            }
-            else {
-                cryptoAccount.setAmountOfCrypto(amountOfCrypto);
-                cryptoAccount.setValuePrice(amountOfCrypto * crypto.getCurrentPrice());
-            }
-        }
-        cryptoAccountRepository.save(cryptoAccount);
-//        userRepository.save(user);
-        return "Crypto: " + cryptoShort + ". Price: " + amountOfCrypto * crypto.getCurrentPrice();
+        saveAccount(user, crypto, amountOfCrypto, currency);
+
+        return "Crypto: " + cryptoName + ". Price: " + amountOfCrypto * crypto.getCurrentPrice();
     }
+
 
     public void deleteUser(String email) {
         User user = userRepository.findUserByEmail(email);
@@ -99,6 +79,56 @@ public class UserService {
             userRepository.delete(user);
         }
         else throw new UserNotFound("User didn't find with email: " + email);
+    }
 
+    private void saveAccount( User user, Crypto crypto, double amountOfCrypto, String...currency) {
+
+//        Check account by cryptoName.
+            List<CryptoAccount> collect = user.getCryptoAccount()
+                    .stream()
+                    .filter(account -> account.getCryptoName().equalsIgnoreCase(crypto.getSymbol()))
+                    .collect(Collectors.toList());
+
+//        If user hasn't got account with such cryptoName we create it.
+            if (collect.isEmpty()){
+                cryptoAccountRepository.save(CryptoAccount.builder()
+                        .cryptoName(crypto.getSymbol())
+                        .valuePrice(amountOfCrypto * crypto.getCurrentPrice())
+                        .amountOfCrypto(amountOfCrypto)
+                        .user(user)
+                        .currency(currency[0])
+                        .build());
+            }
+            else {
+
+//        Check account by currency.
+                List<CryptoAccount> collectByCurrency = collect
+                        .stream()
+                        .filter(account -> account.getCurrency().equalsIgnoreCase(currency[0]))
+                        .collect(Collectors.toList());
+
+
+//        If user has got account with such currency we update it.
+                if (!collectByCurrency.isEmpty()){
+                    collectByCurrency.stream().peek(account -> {
+                                account.setCryptoName(crypto.getSymbol());
+                                account.setAmountOfCrypto(account.getAmountOfCrypto() + amountOfCrypto);
+                                account.setValuePrice(account.getValuePrice() + (amountOfCrypto * crypto.getCurrentPrice()));
+                        })
+                        .findFirst()
+                        .map(cryptoAccountRepository::save);
+                }
+
+//        User hasn't got account with such currency we create it.
+                else {
+                    cryptoAccountRepository.save(CryptoAccount.builder()
+                                    .cryptoName(crypto.getSymbol())
+                                    .valuePrice(amountOfCrypto * crypto.getCurrentPrice())
+                                    .amountOfCrypto(amountOfCrypto)
+                                    .user(user)
+                                    .currency(currency[0])
+                                    .build());
+                }
+            }
     }
 }

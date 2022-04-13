@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface CryptoRepository extends JpaRepository<Crypto, Long>{
 
     Crypto findBySymbol(String symbol);
+
+    Crypto findByName(String name);
 }

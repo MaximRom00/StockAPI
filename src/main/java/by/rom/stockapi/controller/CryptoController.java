@@ -1,18 +1,15 @@
 package by.rom.stockapi.controller;
 
-import by.rom.stockapi.converter.CryptoConverter;
 import by.rom.stockapi.model.Crypto;
+import by.rom.stockapi.model.dto.CryptoAccountDto;
 import by.rom.stockapi.model.dto.CryptoDto;
 import by.rom.stockapi.service.CryptoService;
-import by.rom.stockapi.service.CsvWriter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/crypto")
@@ -20,23 +17,20 @@ public class CryptoController {
 
     private final CryptoService cryptoService;
 
-    private final CsvWriter csvWriter;
+    @Value("${application.fileNameCrypto}")
+    private String fileNameCrypto;
 
-    @Value("${application.fileName}")
-    private String fileName;
+    @Value("${application.fileNameCryptoAccount}")
+    private String fileNameCryptoAccount;
 
-    private final CryptoConverter cryptoConverter;
 
-    public CryptoController(CryptoService cryptoService, CsvWriter csvWriter, CryptoConverter cryptoConverter){
+    public CryptoController(CryptoService cryptoService){
         this.cryptoService = cryptoService;
-        this.csvWriter = csvWriter;
-        this.cryptoConverter = cryptoConverter;
     }
 
-    //Get crypto list by size(size)
+    //Get crypto list by size
     @GetMapping("/list")
     public List<Crypto> getCryptoList(@RequestParam String size){
-
         return cryptoService.getCryptoList(Integer.parseInt(size));
     }
 
@@ -46,14 +40,31 @@ public class CryptoController {
         return cryptoService.findByName(symbol);
     }
 
-    //Get file report in csv file.
+    @GetMapping("/lowestPrice")
+    public Crypto getCryptoLowestPrice(){
+        return cryptoService.getCryptoLowestPrice();
+    }
+
+    @GetMapping("/highestPrice")
+    public Crypto getCryptoHighestPrice(){
+        return cryptoService.getCryptoHighestPrice();
+    }
+
+    @DeleteMapping("/deleteAccount")
+    public ResponseEntity<String> deleteUser(@RequestParam String id){
+        cryptoService.deleteAccount(id);
+        return new ResponseEntity<>("Delete was successful", HttpStatus.OK);
+    }
+
+    //Get file report Crypto currency in csv file.
     @GetMapping("/report")
     public List<CryptoDto> getReport(@RequestParam String size){
-        List<CryptoDto> reportList = cryptoService.getCryptoList(Integer.parseInt(size))
-                .stream()
-                .map(cryptoConverter::toDto)
-                .collect(Collectors.toList());
-        csvWriter.writer(fileName, reportList);
-        return reportList;
+        return cryptoService.getReportCrypto(size, fileNameCrypto);
+    }
+
+    //Get file Crypto Account in csv file and this file will sent to our email.
+    @GetMapping("/mail/accountReport")
+    public List<CryptoAccountDto> getMailReportAccount(){
+        return cryptoService.cryptoAccountSendEmail(fileNameCryptoAccount);
     }
 }

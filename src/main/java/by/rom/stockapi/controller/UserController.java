@@ -23,11 +23,13 @@ public class UserController {
         return userService.saveUser(user);
     }
 
-    @PostMapping("/save_crypto")
+    @PostMapping("/save_account")
     public String saveCryptoToStack(@RequestParam String email,
                                     @RequestParam(name = "crypto_short") String cryptoShort,
-                                    @RequestParam String amount){
-        return userService.addCryptoAccount(email, cryptoShort, amount);
+                                    @RequestParam String amount,
+                                    @RequestParam(required = false) String currency){
+
+        return userService.addCryptoAccount(email, cryptoShort, amount, currency);
     }
 
     @DeleteMapping("/delete")

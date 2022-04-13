@@ -1,7 +1,8 @@
-# URL API
+# API Settings
 application:
   cryptoCurrencyUrlTemplate: 'https://api.coingecko.com/api/v3/coins/markets?'
-  fileName: 'crypto.csv'
+  fileNameCrypto: 'crypto.csv'
+  fileNameCryptoAccount: 'cryptoAccount.csv'
 
 server:
   port: 8081
@@ -12,7 +13,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
   datasource:
     url: jdbc:mysql://localhost:3306/stock
     password: '12345'
