@@ -1,0 +1,11 @@
+id,currency,amountOfCrypto,cryptoName,userEmail,valuePrice
+1,usd,3.7,doge,max@max.com,0.503
+2,eur,5.0,doge,max@max.com,0.627
+3,eur,1.5,btc,alex@alex.com,54783.0
+4,pln,121.0,doge,alex@alex.com,70.351
+5,usd,0.7,usdt,alex@alex.com,0.699
+6,cny,22.5,sol,alex@alex.com,14510.025
+7,usd,1.05,eth,dasha@dasha.com,3130.109
+8,usd,1.0,btc,dasha@dasha.com,39445.0
+9,pln,99.0,xmr,dasha@dasha.com,98909.91
+10,usd,100.0,dai,dasha@dasha.com,99.785
