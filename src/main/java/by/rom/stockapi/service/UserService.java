@@ -46,7 +46,7 @@ public class UserService {
         return user;
     }
 
-    public String addCryptoAccount(String email, String cryptoName, String amount, String...currency){
+    public String addCryptoAccount(String email, String cryptoName, double amountOfCrypto, String...currency){
         User user = userRepository.findUserByEmail(email);
 
         if (user == null){
@@ -58,8 +58,6 @@ public class UserService {
         if (crypto == null){
             throw new UserNotFound("Crypto: " + cryptoName + " not found.");
         }
-
-        double amountOfCrypto = Double.parseDouble(amount);
 
         if (currency[0] != null){
            crypto = cryptoApiService.getCryptoByCurrency(currency[0], cryptoName);

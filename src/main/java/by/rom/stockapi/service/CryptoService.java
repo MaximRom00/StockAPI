@@ -62,9 +62,9 @@ public class CryptoService {
         else throw new CryptoCurrencyNotFound("Cryptocurrency not found: " + symbol);
     }
 
-    public List<CryptoDto> getReportCrypto(String size, String fileNameCrypto){
+    public List<CryptoDto> getReportCrypto(int size, String fileNameCrypto){
 
-        List<CryptoDto> reportList = getCryptoList(Integer.parseInt(size))
+        List<CryptoDto> reportList = getCryptoList(size)
                 .stream()
                 .map(cryptoConverter::toDto)
                 .collect(Collectors.toList());
@@ -90,11 +90,11 @@ public class CryptoService {
         return reportList;
     }
 
-    public void deleteAccount(String id) {
-        Optional<CryptoAccount> cryptoAccount = cryptoAccountRepository.findById(Long.parseLong(id));
+    public void deleteAccount(long id) {
+        Optional<CryptoAccount> cryptoAccount = cryptoAccountRepository.findById(id);
 
         if (cryptoAccount.isPresent()){
-            cryptoAccountRepository.deleteById(Long.parseLong(id));
+            cryptoAccountRepository.deleteById(id);
         }
         else throw new CryptoAccountNotFound("Account didn't find with id: " + id);
     }

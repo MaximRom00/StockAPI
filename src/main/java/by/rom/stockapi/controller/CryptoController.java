@@ -30,8 +30,8 @@ public class CryptoController {
 
     //Get crypto list by size
     @GetMapping("/list")
-    public List<Crypto> getCryptoList(@RequestParam String size){
-        return cryptoService.getCryptoList(Integer.parseInt(size));
+    public List<Crypto> getCryptoList(@RequestParam int size){
+        return cryptoService.getCryptoList(size);
     }
 
     //Get crypto by symbol.
@@ -51,14 +51,14 @@ public class CryptoController {
     }
 
     @DeleteMapping("/deleteAccount")
-    public ResponseEntity<String> deleteUser(@RequestParam String id){
+    public ResponseEntity<String> deleteUser(@RequestParam long id){
         cryptoService.deleteAccount(id);
         return new ResponseEntity<>("Delete was successful", HttpStatus.OK);
     }
 
     //Get file report Crypto currency in csv file.
     @GetMapping("/report")
-    public List<CryptoDto> getReport(@RequestParam String size){
+    public List<CryptoDto> getReport(@RequestParam int size){
         return cryptoService.getReportCrypto(size, fileNameCrypto);
     }
 

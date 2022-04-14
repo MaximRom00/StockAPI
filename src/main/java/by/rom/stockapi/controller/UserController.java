@@ -26,7 +26,7 @@ public class UserController {
     @PostMapping("/save_account")
     public String saveCryptoToStack(@RequestParam String email,
                                     @RequestParam(name = "crypto_short") String cryptoShort,
-                                    @RequestParam String amount,
+                                    @RequestParam double amount,
                                     @RequestParam(required = false) String currency){
 
         return userService.addCryptoAccount(email, cryptoShort, amount, currency);
