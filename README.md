@@ -37,7 +37,7 @@ DELETE Requests:
 https://www.coingecko.com/en/api/documentation
 
 <p align="center">
-<img  src="https://logovectordl.com/wp-content/uploads/2021/11/coingecko-logo-vector.png" width="275" height="175"> 
+<img  src="https://bitexpert.io/wp-content/uploads/2022/01/coingecko-.png" width="450" height="275"> 
                                                                                                                    </p>                                                     
                                                                                                                    
 # Run 
